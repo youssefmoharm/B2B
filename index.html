@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>🧠 AI Dynamic Quiz | B2B Sales Mastery</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-deep: #05070a;
+    --surface: #0f1219;
+    --card-bg: rgba(18, 22, 32, 0.92);
+    --border-dim: #1e2a3a;
+    --accent-blue: #2b6ef0;
+    --accent-correct: #10b981;
+    --accent-wrong: #ef4444;
+    --accent-gold: #facc15;
+    --ai-purple: #8b5cf6;
+    --text-main: #f1f5f9;
+    --text-dim: #94a3b8;
+    --radius-xl: 1.5rem;
+    --radius-lg: 1rem;
+  }
+
+  body {
+    background: radial-gradient(circle at 10% 20%, #0a0e17, #020408);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+    padding-bottom: 80px;
+  }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: #1a1f2a; border-radius: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 10px; }
+
+  /* glass header */
+  .glass-header {
+    backdrop-filter: blur(12px);
+    background: rgba(15, 18, 25, 0.8);
+    border-bottom: 1px solid rgba(43, 110, 240, 0.3);
+    padding: 16px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .logo h2 { font-weight: 800; background: linear-gradient(135deg, #fff, var(--accent-blue)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .streak-badge {
+    background: #2a241a;
+    border-radius: 50px;
+    padding: 6px 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(255,140,66,0.5);
+  }
+  .streak-badge i { color: #ff8c42; }
+  #streakValue { font-weight: 800; font-size: 1.4rem; color: #ff8c42; }
+
+  /* dashboard stats */
+  .dashboard {
+    max-width: 1400px;
+    margin: 28px auto 16px;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+  }
+  .stat-card {
+    background: rgba(12, 16, 24, 0.7);
+    backdrop-filter: blur(4px);
+    border: 1px solid #1e2a3a;
+    border-radius: 28px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-number { font-size: 1.8rem; font-weight: 800; }
+  .stat-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; }
+
+  /* action row: timer, difficulty, AI */
+  .action-bar {
+    max-width: 1400px;
+    margin: 12px auto;
+    padding: 0 24px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+  }
+  .timer-box {
+    background: #11161f;
+    border-radius: 60px;
+    padding: 8px 24px;
+    border-left: 3px solid var(--accent-blue);
+    font-weight: 700;
+    font-family: monospace;
+    font-size: 1.2rem;
+  }
+  .difficulty-selector { display: flex; gap: 10px; }
+  .difficulty-btn {
+    background: transparent;
+    border: 1px solid #2a3442;
+    padding: 6px 18px;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: 0.2s;
+    color: var(--text-dim);
+  }
+  .difficulty-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); color: white; }
+
+  /* AI generator panel */
+  .ai-panel {
+    background: linear-gradient(95deg, rgba(139,92,246,0.15), rgba(43,110,240,0.1));
+    border: 1px solid rgba(139,92,246,0.4);
+    border-radius: 60px;
+    padding: 6px 12px 6px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .ai-panel span { font-size: 0.85rem; font-weight: 500; }
+  .ai-btn {
+    background: #8b5cf6;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    color: white;
+  }
+  .ai-btn.small { background: #2d3a5e; padding: 5px 12px; font-size: 0.75rem; }
+  .ai-btn:hover { filter: brightness(1.1); transform: scale(0.97); }
+  .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.6s linear infinite; margin-left: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* quiz grid */
+  .quiz-grid {
+    max-width: 1200px;
+    margin: 28px auto;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .question-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(43,110,240,0.2);
+    border-radius: var(--radius-xl);
+    padding: 22px;
+    transition: all 0.2s;
+    animation: fadeInUp 0.3s ease;
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .question-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .cat-tag {
+    font-size: 0.7rem;
+    background: #1e2a3a;
+    padding: 4px 12px;
+    border-radius: 30px;
+  }
+  .ai-badge { background: #8b5cf6; color: white; }
+  .q-text { font-size: 1rem; font-weight: 500; margin-bottom: 20px; line-height: 1.4; }
+  .options-list { display: flex; flex-direction: column; gap: 10px; }
+  .opt-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid #253041;
+    border-radius: 60px;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .opt-item:hover { background: rgba(43,110,240,0.1); border-color: var(--accent-blue); }
+  .opt-prefix {
+    font-weight: 800;
+    background: #1b2330;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 30px;
+  }
+  .selected-blue { background: rgba(43,110,240,0.25); border-color: var(--accent-blue); box-shadow: 0 0 6px rgba(43,110,240,0.3); }
+  .correct-highlight { background: rgba(16,185,129,0.2); border-color: var(--accent-correct); }
+  .wrong-highlight { background: rgba(239,68,68,0.2); border-color: var(--accent-wrong); animation: shake 0.2s ease; }
+  @keyframes shake { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-3px); } 75%{ transform: translateX(3px); } }
+  .answer-hint { margin-top: 16px; font-size: 0.75rem; color: var(--text-dim); cursor: pointer; display: inline-block; border-bottom: 1px dashed; }
+  .answer-reveal-text { margin-top: 10px; padding: 10px; background: #0f1722; border-radius: 16px; display: none; font-size: 0.8rem; }
+  .answer-reveal-text.show { display: block; }
+
+  .sticky-submit {
+    position: sticky;
+    bottom: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    z-index: 50;
+  }
+  .btn-primary {
+    background: linear-gradient(95deg, var(--accent-blue), #1e40af);
+    border: none;
+    padding: 12px 32px;
+    border-radius: 60px;
+    font-weight: 800;
+    cursor: pointer;
+    color: white;
+    box-shadow: 0 4px 15px rgba(43,110,240,0.4);
+  }
+  .btn-secondary {
+    background: #1e293b;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 60px;
+    font-weight: 600;
+    cursor: pointer;
+    color: white;
+  }
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    visibility: hidden;
+    opacity: 0;
+    transition: 0.2s;
+  }
+  .modal-overlay.active { visibility: visible; opacity: 1; }
+  .modal-content {
+    background: #11151f;
+    border-radius: 32px;
+    padding: 28px;
+    max-width: 380px;
+    text-align: center;
+    border: 1px solid var(--accent-blue);
+  }
+  @media (max-width: 700px) { .ai-panel { width: 100%; justify-content: center; } .action-bar { flex-direction: column; align-items: stretch; } }
+</style>
+</head>
+<body>
+
+<div class="glass-header">
+  <div class="header-inner">
+    <div class="logo"><h2><i class="fas fa-brain"></i> SalesPulse AI</h2></div>
+    <div class="streak-badge"><i class="fas fa-fire"></i> <span id="streakValue">0</span> <span style="font-size:0.7rem;">streak</span></div>
+    <div><i class="fas fa-save"></i> auto‑save</div>
+  </div>
+</div>
+
+<div class="dashboard">
+  <div class="stat-card"><i class="fas fa-check-circle"></i><div class="stat-number" id="correctCounter">0</div><div class="stat-label">Correct</div></div>
+  <div class="stat-card"><i class="fas fa-flag-checkered"></i><div class="stat-number" id="answeredCounter">0</div><div class="stat-label">Answered</div></div>
+  <div class="stat-card"><i class="fas fa-percent"></i><div class="stat-number" id="scorePercent">0%</div><div class="stat-label">Accuracy</div></div>
+  <div class="stat-card"><i class="fas fa-list"></i><div class="stat-number" id="totalQuestionsCount">50</div><div class="stat-label">Total Qs</div></div>
+</div>
+
+<div class="action-bar">
+  <div class="timer-box"><i class="far fa-clock"></i> <span id="timerDisplay">00:00</span></div>
+  <div class="difficulty-selector">
+    <button data-diff="easy" class="difficulty-btn active">🌱 Easy</button>
+    <button data-diff="medium" class="difficulty-btn">⚡ Medium</button>
+    <button data-diff="hard" class="difficulty-btn">🔥 Hard</button>
+  </div>
+  <div class="ai-panel">
+    <span><i class="fas fa-robot"></i> 🧠 AI Generate</span>
+    <button id="aiGen3" class="ai-btn small">+3 Qs</button>
+    <button id="aiGen5" class="ai-btn small">+5 Qs</button>
+    <button id="aiGen10" class="ai-btn small">+10 Qs</button>
+  </div>
+</div>
+
+<div class="quiz-grid" id="quizGrid"></div>
+<div class="sticky-submit">
+  <button class="btn-primary" id="submitFinalBtn"><i class="fas fa-trophy"></i> Submit & Score</button>
+  <button class="btn-secondary" id="resetQuizBtn"><i class="fas fa-undo-alt"></i> Reset Quiz</button>
+</div>
+
+<div id="confirmModal" class="modal-overlay">
+  <div class="modal-content"><i class="fas fa-exclamation-triangle" style="font-size:2rem;color:#facc15;"></i><h3 style="margin:16px 0">Unanswered Questions</h3><p id="modalMsg"></p><button id="modalContinueBtn" style="background:#2b6ef0;border:none;padding:8px 20px;border-radius:40px;margin-top:12px;">Submit Anyway</button><button id="modalCancelBtn" style="margin-left:10px;background:#1e293b;border:none;padding:8px 20px;border-radius:40px;">Cancel</button></div>
+</div>
+
+<script>
+  // ---------- BASE QUESTION BANK (50 items from previous, plus AI dynamic) ----------
+  const CORE_QUESTIONS = [
+    {cat:"b2b", text:"What does B2B stand for?", opts:["Business-to-Broker","Business-to-Business","Brand-to-Brand","Buyer-to-Business"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"b2b", text:"Which best describes B2B sales?", opts:["Selling products directly to individual consumers","Selling products or services from one business to another","Marketing on social media platforms","Selling digital ads to end users"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"b2b", text:"What does a B2B sales process typically require?", opts:["A single one-time transaction","Dual relationships, effective communication, and demonstration of value","Emotional advertising to consumers","Impulse-buying techniques"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"b2b", text:"Compared to B2C, B2B products and services typically have:", opts:["Lower prices","Similar prices","Higher prices","No fixed pricing"], ans:2, difficulty:"easy", aiGenerated:false},
+    {cat:"b2b", text:"Which of the following is a key example of a B2B company?", opts:["Netflix streaming to consumers","Asana selling project management solutions to enterprises","Amazon delivering groceries to households","Spotify offering music subscriptions to individuals"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"b2b", text:"Hubspot is an example of a B2B company because it:", opts:["Sells entertainment to individuals","Sells CRM software to small businesses","Provides food delivery to consumers","Offers retail clothing online"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"b2b", text:"Which company is an example of B2B by selling crude oil to commercial oil fields?", opts:["DoorDash","Asana","Aramco","Hubspot"], ans:2, difficulty:"medium", aiGenerated:false},
+    {cat:"b2b", text:"Brentag operates in B2B by selling chemicals to:", opts:["Government agencies","Individual scientists","Cosmetics companies","Retail pharmacies"], ans:2, difficulty:"medium", aiGenerated:false},
+    {cat:"b2b", text:"In B2B sales, what is the primary focus when determining deal value?", opts:["Emotional appeal","ROI and LTV (Return on Investment & Lifetime Value)","Brand awareness","Social media engagement"], ans:1, difficulty:"medium", aiGenerated:false},
+    {cat:"b2b", text:"Which element is NOT listed as a key element in B2B hierarchy-based sales?", opts:["Closing","Trust","Networking","Advertising campaigns"], ans:3, difficulty:"hard", aiGenerated:false},
+    {cat:"b2b", text:"How many decision makers are typically involved in a B2B purchase on average?", opts:["1","2","5","10"], ans:2, difficulty:"medium", aiGenerated:false},
+    {cat:"b2b", text:"Compared to B2C, the B2B sales cycle is:", opts:["Shorter and simpler","Longer and more complex","Identical in length","Always completed in one meeting"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"b2b", text:"Which best describes the Total Addressable Market (TAM) for B2B vs B2C?", opts:["B2B TAM is larger than B2C","B2C TAM is larger than B2B","Both have the same TAM","TAM does not apply to B2B"], ans:1, difficulty:"hard", aiGenerated:false},
+    {cat:"b2b", text:"Customer Acquisition Cost (CAC) in B2B is generally:", opts:["Lower than B2C","Higher than B2C","The same as B2C","Not a relevant metric"], ans:1, difficulty:"medium", aiGenerated:false},
+    {cat:"b2b", text:"B2B marketing is typically described as:", opts:["Broad-based consumer advertising","Focused (industry publications, events)","Primarily social media","TV and radio campaigns"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"b2b", text:"In B2C, customer acquisitions generally have:", opts:["Higher CAPEX due to more stakeholders","Lower CAPEX due to smaller deals and fewer stakeholders","The same CAPEX as B2B","No CAPEX at all"], ans:1, difficulty:"hard", aiGenerated:false},
+    {cat:"b2b", text:"B2C purchases are most often described as:", opts:["Long-term relationship driven","One-time or impulsive purchases","Committee-approved decisions","ROI-focused investments"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"b2b", text:"Which statement about B2B deal values is TRUE?", opts:["B2B deals are typically lower value than B2C","B2B deals are typically higher value than B2C","B2B and B2C have equal deal values","B2B deals have no measurable value"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"pipeline", text:"What does the sales pipeline help senior management understand FIRST?", opts:["Individual employee performance","The overall health of the business","Product pricing strategies","Employee compensation plans"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"pipeline", text:"Which of the following is a benefit of the sales pipeline for management?", opts:["Identifying potential weakness on a segment-by-segment basis","Tracking employee attendance","Managing payroll systems","Monitoring competitor websites"], ans:0, difficulty:"medium", aiGenerated:false},
+    {cat:"pipeline", text:"The sales pipeline provides management with a 'heads-up warning' for:", opts:["Upcoming holidays","Future potential weaknesses in a segment or product","Employee promotions","New product launches by competitors"], ans:1, difficulty:"medium", aiGenerated:false},
+    {cat:"pipeline", text:"Which type of lead refers to a business that might potentially need your product?", opts:["MQL","SQL","Suspect","Inbound lead"], ans:2, difficulty:"hard", aiGenerated:false},
+    {cat:"pipeline", text:"An MQL stands for:", opts:["Market Qualified Lead","Marketing Qualified Lead","Managed Quality Lead","Monthly Qualified Lead"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"pipeline", text:"An SQL stands for:", opts:["Structured Query Lead","Sales Qualified Lead","Standard Qualified Lead","System Query Lead"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"pipeline", text:"Which of the following is a type of lead that comes to YOU rather than being sought out?", opts:["Suspect","Prospect","Inbound lead","Cold call lead"], ans:2, difficulty:"medium", aiGenerated:false},
+    {cat:"pipeline", text:"A 'warm call' in B2B sales refers to:", opts:["A call made in summer","A call to a prospective lead with prior context or relationship","A random cold call","A call about product pricing only"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"pipeline", text:"Which sequence best describes the lead progression in a sales pipeline?", opts:["Lead → Suspect → Prospect → MQL → SQL","Suspect → Prospect → Lead → MQL/SQL","MQL → SQL → Suspect → Prospect → Lead","SQL → MQL → Lead → Prospect → Suspect"], ans:1, difficulty:"hard", aiGenerated:false},
+    {cat:"pipeline", text:"In B2B sales, why shouldn't you expect to close a deal on the first meeting?", opts:["Because products are too expensive","Due to hierarchy, approvals, and multiple decision-makers","Because B2B sales don't involve closing","Because buyers don't trust new salespeople"], ans:1, difficulty:"medium", aiGenerated:false},
+    {cat:"pipeline", text:"What is the recommended approach when dealing with hierarchical B2B buyers?", opts:["Pressure them to sign immediately","Offer heavy discounts","Give knowledge and insight to make them interested","Avoid follow-up calls"], ans:2, difficulty:"medium", aiGenerated:false},
+    {cat:"velocity", text:"Which of the following is listed as a component associated with sales velocity?", opts:["Marketing budget","Payment terms","Customer satisfaction score","Employee headcount"], ans:1, difficulty:"hard", aiGenerated:false},
+    {cat:"velocity", text:"Sales pipeline lead time is associated with which concept?", opts:["Customer churn rate","Sales velocity","Brand awareness","Social media ROI"], ans:1, difficulty:"medium", aiGenerated:false},
+    {cat:"velocity", text:"Sales pipeline velocity lead time relates to:", opts:["How fast a product is manufactured","The speed at which deals move through the pipeline","The time taken to hire new salespeople","The speed of customer service responses"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"doordash", text:"What type of company is DoorDash?", opts:["A traditional restaurant chain","A technology company connecting consumers with local businesses","A grocery retail store","A logistics shipping company"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"doordash", text:"In how many countries does DoorDash operate?", opts:["Over 10","Over 20","Over 30","Over 50"], ans:2, difficulty:"medium", aiGenerated:false},
+    {cat:"doordash", text:"When was DoorDash founded?", opts:["2010","2011","2012","2013"], ans:3, difficulty:"easy", aiGenerated:false},
+    {cat:"doordash", text:"How does DoorDash primarily help merchants grow their business?", opts:["By providing restaurant equipment","By attracting new customers, increasing order volume and financial growth","By offering marketing consulting services","By providing bank loans"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"doordash", text:"Can a merchant be on another delivery app AND still join DoorDash?", opts:["No, DoorDash requires exclusivity","Yes, a merchant can be on another app and still join DoorDash","Only if they pay extra fees","Only for the first 3 months"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"doordash", text:"What is DoorDash's activation fee for new merchants?", opts:["$99","$199","$50","No activation fee"], ans:3, difficulty:"medium", aiGenerated:false},
+    {cat:"doordash", text:"What commission rate does DoorDash charge per transaction?", opts:["5% + $0.50","2.9% + $0.30","3.5% + $0.25","1.5% + $0.10"], ans:1, difficulty:"hard", aiGenerated:false},
+    {cat:"doordash", text:"DoorDash charges $0.30 per order in addition to what percentage of the total transaction?", opts:["1.9%","2.5%","2.9%","3.9%"], ans:2, difficulty:"hard", aiGenerated:false},
+    {cat:"doordash", text:"How many total orders has DoorDash facilitated over 10 years?", opts:["1 billion","3 billion","5 billion","10 billion"], ans:2, difficulty:"medium", aiGenerated:false},
+    {cat:"doordash", text:"How much in total sales has DoorDash generated for merchants over 10 years?", opts:["Over $10 billion","Over $50 billion","Over $100 billion","Over $200 billion"], ans:2, difficulty:"hard", aiGenerated:false},
+    {cat:"doordash", text:"How much have 'Dashers' (delivery drivers) earned through the DoorDash platform over 10 years?", opts:["Over $10 billion","Over $35 billion","Over $50 billion","Over $100 billion"], ans:1, difficulty:"hard", aiGenerated:false},
+    {cat:"doordash", text:"What is a 'Dasher' in the context of DoorDash?", opts:["A DoorDash software product","A delivery person who earns money through the platform","A type of DoorDash merchant","A DoorDash investor"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"b2b", text:"In B2B, the concept of 'value based on life' (not only on product) refers to:", opts:["Pricing strategy","Building long-term relational value beyond the product itself","Product lifecycle management","Environmental sustainability"], ans:1, difficulty:"medium", aiGenerated:false},
+    {cat:"b2b", text:"Trust in B2B sales is important because:", opts:["It allows discounts","It enables deals with multiple decision-makers and long sales cycles","It eliminates the need for contracts","It replaces the need for product demos"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"b2b", text:"Which marketing channel is most typical for B2B companies?", opts:["Television advertisements","Billboard campaigns","Industry publications and professional events","Mass consumer social media"], ans:2, difficulty:"easy", aiGenerated:false},
+    {cat:"pipeline", text:"A 'Prospect' in the sales pipeline is best described as:", opts:["A confirmed customer","A business that has shown some level of interest or fit","A random cold contact","An existing long-term client"], ans:1, difficulty:"easy", aiGenerated:false},
+    {cat:"b2b", text:"Which element of B2B closing is most emphasized when dealing with multiple stakeholders?", opts:["Speed","Pressure tactics","Knowledge sharing and building interest at each level","Offering the lowest price"], ans:2, difficulty:"medium", aiGenerated:false},
+    {cat:"velocity", text:"Which three components are all associated with sales velocity?", opts:["Payment terms, Sales pipeline lead time, Sales pipeline velocity lead time","Discounts, Promotions, Advertising","CAC, TAM, LTV","MQL, SQL, Inbound leads"], ans:0, difficulty:"hard", aiGenerated:false}
+  ];
+
+  // state
+  let currentDifficulty = "easy";
+  let allQuestions = [];      // mutable array (core + AI generated)
+  let userSelections = [];
+  let submittedMode = false;
+  let streak = 0;
+  let timerSeconds = 0;
+  let timerInterval = null;
+
+  // Helper functions
+  function shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+  
+  function filterBaseByDifficulty() {
+    let filtered = CORE_QUESTIONS.filter(q => q.difficulty === currentDifficulty);
+    if (filtered.length < 50) { let extras = CORE_QUESTIONS.filter(q => q.difficulty === "easy").slice(0, 50 - filtered.length); filtered = [...filtered, ...extras]; }
+    return shuffleArray(filtered.slice(0, 50));
+  }
+
+  function resetToCore() {
+    allQuestions = filterBaseByDifficulty();
+    userSelections = new Array(allQuestions.length).fill(null);
+    submittedMode = false;
+    renderQuiz();
+    updateStatsUI();
+    saveToLocalStorage();
+  }
+
+  // AI Dynamic Generator (simulated realistic B2B questions)
+  function generateAIQuestions(count) {
+    const topics = ["B2B Negotiation", "Sales Forecasting", "CRM Strategy", "Lead Scoring", "Churn Reduction", "Upselling", "B2B Buyer Personas", "Sales Automation", "Territory Planning"];
+    const newQs = [];
+    for (let i = 0; i < count; i++) {
+      const topic = topics[Math.floor(Math.random() * topics.length)];
+      const correctIdx = Math.floor(Math.random() * 4);
+      const opts = [
+        `Strategy: focus on ${topic} alignment with KPIs`,
+        `Approach: ${topic} using data-driven methods`,
+        `Method: implement ${topic} through stakeholder buy-in`,
+        `Tactic: ${topic} via relationship mapping`
+      ];
+      newQs.push({
+        cat: "ai-generated",
+        text: `🧠 AI: In B2B sales, what is the most effective ${topic} technique for scaling revenue?`,
+        opts: opts,
+        ans: correctIdx,
+        difficulty: currentDifficulty,
+        aiGenerated: true
+      });
+    }
+    return newQs;
+  }
+
+  function addAIGeneratedQuestions(count) {
+    if (submittedMode) {
+      alert("Please reset quiz before generating new AI questions.");
+      return;
+    }
+    const newAI = generateAIQuestions(count);
+    allQuestions = [...allQuestions, ...newAI];
+    userSelections = [...userSelections, ...new Array(newAI.length).fill(null)];
+    renderQuiz();
+    updateStatsUI();
+    saveToLocalStorage();
+    // trigger special animation feedback
+    canvasConfetti({ particleCount: 60, spread: 45, origin: { y: 0.8 }, colors: ['#8b5cf6'] });
+    playBeep();
+  }
+
+  function playBeep() {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.value = 1200; gain.gain.value = 0.1;
+    osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
+    osc.stop(audioCtx.currentTime + 0.2);
+  }
+
+  function selectOption(qIdx, optIdx) {
+    if (submittedMode) return;
+    userSelections[qIdx] = optIdx;
+    renderQuiz();
+    updateStatsUI();
+    saveToLocalStorage();
+  }
+
+  function updateStatsUI() {
+    let answered = userSelections.filter(s => s !== null).length;
+    let correct = 0;
+    userSelections.forEach((sel, idx) => { if (sel !== null && sel === allQuestions[idx].ans) correct++; });
+    let percent = answered ? Math.round((correct / answered) * 100) : 0;
+    document.getElementById('correctCounter').innerText = correct;
+    document.getElementById('answeredCounter').innerText = answered;
+    document.getElementById('scorePercent').innerText = percent + '%';
+    document.getElementById('totalQuestionsCount').innerText = allQuestions.length;
+    if (answered === allQuestions.length && !submittedMode) document.getElementById('submitFinalBtn').style.background = "#facc15";
+  }
+
+  function renderQuiz() {
+    const container = document.getElementById('quizGrid');
+    container.innerHTML = '';
+    allQuestions.forEach((q, i) => {
+      const selectedIdx = userSelections[i];
+      const letters = ['A', 'B', 'C', 'D'];
+      const card = document.createElement('div'); card.className = 'question-card';
+      const aiTag = q.aiGenerated ? '<span class="cat-tag ai-badge"><i class="fas fa-robot"></i> AI-Gen</span>' : `<span class="cat-tag">${q.cat.toUpperCase()}</span>`;
+      card.innerHTML = `
+        <div class="question-header">${aiTag}<span>Q${i+1}/${allQuestions.length}</span></div>
+        <div class="q-text">${q.text}</div>
+        <div class="options-list" id="opts-${i}"></div>
+        <div class="answer-hint" data-idx="${i}"><i class="fas fa-lightbulb"></i> Reveal answer</div>
+        <div class="answer-reveal-text" id="reveal-${i}"><strong>✅ Correct:</strong> ${letters[q.ans]}. ${q.opts[q.ans]}</div>
+      `;
+      const optsDiv = card.querySelector('.options-list');
+      q.opts.forEach((opt, optIdx) => {
+        const optDiv = document.createElement('div'); optDiv.className = 'opt-item';
+        if (selectedIdx === optIdx) optDiv.classList.add('selected-blue');
+        if (submittedMode && selectedIdx !== null && optIdx === q.ans && selectedIdx !== q.ans) optDiv.classList.add('correct-highlight');
+        if (submittedMode && selectedIdx === optIdx && selectedIdx !== q.ans) optDiv.classList.add('wrong-highlight');
+        optDiv.innerHTML = `<span class="opt-prefix">${letters[optIdx]}</span><span>${opt}</span>`;
+        optDiv.addEventListener('click', () => { if (!submittedMode) selectOption(i, optIdx); });
+        optsDiv.appendChild(optDiv);
+      });
+      const hintBtn = card.querySelector('.answer-hint');
+      const revealBox = card.querySelector('.answer-reveal-text');
+      hintBtn.addEventListener('click', () => revealBox.classList.toggle('show'));
+      container.appendChild(card);
+    });
+  }
+
+  function finalSubmit() {
+    let unanswered = userSelections.filter(s => s === null).length;
+    if (unanswered > 0 && !submittedMode) {
+      document.getElementById('modalMsg').innerHTML = `You have ${unanswered} unanswered question(s). Submit anyway?`;
+      const modal = document.getElementById('confirmModal');
+      modal.classList.add('active');
+      document.getElementById('modalContinueBtn').onclick = () => { modal.classList.remove('active'); performSubmit(); };
+      document.getElementById('modalCancelBtn').onclick = () => modal.classList.remove('active');
+      return;
+    }
+    performSubmit();
+  }
+
+  function performSubmit() {
+    if (submittedMode) return;
+    submittedMode = true;
+    stopTimer();
+    let correctCount = 0;
+    userSelections.forEach((sel, idx) => { if (sel !== null && sel === allQuestions[idx].ans) correctCount++; });
+    if (correctCount >= allQuestions.length * 0.8) canvasConfetti({ particleCount: 200, spread: 70 });
+    // update streak
+    let newStreak = 0;
+    for (let i = 0; i < userSelections.length; i++) {
+      if (userSelections[i] !== null && userSelections[i] === allQuestions[i].ans) newStreak++;
+      else newStreak = 0;
+      if (newStreak > streak) streak = newStreak;
+    }
+    document.getElementById('streakValue').innerText = streak;
+    renderQuiz();
+    updateStatsUI();
+    saveToLocalStorage();
+  }
+
+  function resetAll() {
+    submittedMode = false;
+    resetToCore();
+    streak = 0;
+    document.getElementById('streakValue').innerText = streak;
+    stopTimer(); startTimer();
+  }
+
+  function changeDifficulty(level) {
+    currentDifficulty = level;
+    document.querySelectorAll('.difficulty-btn').forEach(btn => { if (btn.dataset.diff === level) btn.classList.add('active'); else btn.classList.remove('active'); });
+    resetToCore();
+  }
+
+  function saveToLocalStorage() {
+    localStorage.setItem('b2b_ai_quiz', JSON.stringify({ difficulty: currentDifficulty, questions: allQuestions, selections: userSelections, streak, timestamp: Date.now() }));
+  }
+  function loadFromStorage() {
+    const saved = localStorage.getItem('b2b_ai_quiz');
+    if (saved) {
+      try { const data = JSON.parse(saved); currentDifficulty = data.difficulty || "easy"; allQuestions = data.questions || filterBaseByDifficulty(); userSelections = data.selections || new Array(allQuestions.length).fill(null); streak = data.streak || 0; document.getElementById('streakValue').innerText = streak; submittedMode = false; renderQuiz(); updateStatsUI(); } catch(e) { resetToCore(); }
+    } else resetToCore();
+    document.querySelector(`.difficulty-btn[data-diff="${currentDifficulty}"]`).classList.add('active');
+  }
+
+  function startTimer() { if (timerInterval) clearInterval(timerInterval); timerSeconds = 0; updateTimerDisplay(); timerInterval = setInterval(() => { timerSeconds++; updateTimerDisplay(); }, 1000); }
+  function stopTimer() { if (timerInterval) clearInterval(timerInterval); }
+  function updateTimerDisplay() { let mins = Math.floor(timerSeconds / 60); let secs = timerSeconds % 60; document.getElementById('timerDisplay').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`; }
+
+  document.getElementById('submitFinalBtn').onclick = finalSubmit;
+  document.getElementById('resetQuizBtn').onclick = resetAll;
+  document.getElementById('aiGen3').onclick = () => addAIGeneratedQuestions(3);
+  document.getElementById('aiGen5').onclick = () => addAIGeneratedQuestions(5);
+  document.getElementById('aiGen10').onclick = () => addAIGeneratedQuestions(10);
+  document.querySelectorAll('.difficulty-btn').forEach(btn => btn.onclick = () => changeDifficulty(btn.dataset.diff));
+  
+  loadFromStorage();
+  startTimer();
+</script>
+</body>
+</html>
